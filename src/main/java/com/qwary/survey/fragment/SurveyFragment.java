@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 
 import com.qwary.survey.helper.DBHelper;
 import com.qwary.survey.interfaces.OnWebViewResponseListener;
+import com.qwary.survey.model.ParamModel;
 import com.qwary.survey.model.SurveyModel;
 import com.qwary.survey.notification.NotifyMe;
 
@@ -29,6 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -48,6 +51,7 @@ public final class SurveyFragment extends Fragment {
 
     private String domain;
     private String token;
+    private ArrayList<ParamModel> param;
 
     private Boolean loader;
     private Boolean modal;
@@ -62,6 +66,7 @@ public final class SurveyFragment extends Fragment {
     WebView qwWebView;
 
     public SurveyFragment() {
+        param = new ArrayList<>();
         //  public, no-arg constructor
     }
 
@@ -70,6 +75,17 @@ public final class SurveyFragment extends Fragment {
         if (extras != null) {
             this.domain = extras.getString("domain");
             this.token = extras.getString("token");
+            if (extras.containsKey("param0")) {
+                int i = 0;
+                while (true) {
+                    if (extras.getStringArray("param" + i) != null) {
+                        param.add(new ParamModel(extras.getStringArray("param" + i)[0], extras.getStringArray("param" + i)[1]));
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+            }
             this.loader = extras.getBoolean("loader");
             this.modal = extras.getBoolean("modal");
             this.isPrepare = extras.getBoolean("prepare");
@@ -95,8 +111,8 @@ public final class SurveyFragment extends Fragment {
                              Bundle savedInstanceState) {
         FrameLayout frameLayout = new FrameLayout(getActivity());
 
-        if(isPrepare) {
-            if(this.startAfter > 0L) {
+        if (isPrepare) {
+            if (this.startAfter > 0L) {
 
                 Date date = new Date(now.getTimeInMillis() + startAfter);
 
@@ -115,7 +131,7 @@ public final class SurveyFragment extends Fragment {
                         .rrule("FREQ=MINUTELY;INTERVAL=5;COUNT=2")
                         .build();
 
-                getActivity().finish();
+//                getActivity().finish();
             }
         } else {
             dbHelper = new DBHelper(getActivity().getApplicationContext());
@@ -158,7 +174,7 @@ public final class SurveyFragment extends Fragment {
                     if (consoleMessage.message().contains("{")) {
                         if (isJSONValid(consoleMessage.message().split(":: ")[1])) {
                             responseListener.onResponseEvent(toJSON(consoleMessage.message().split(":: ")[1]));
-                            if(!dbHelper.surveyExist(domain, token)) {
+                            if (!dbHelper.surveyExist(domain, token)) {
                                 dbHelper.insertSurvey(new SurveyModel(domain, token, loader, modal, isAlreadyTaken, startAfter, repeatInterval));
                             }
                         }
@@ -191,7 +207,19 @@ public final class SurveyFragment extends Fragment {
                 }
             });
 
-            qwWebView.loadUrl(this.domain + this.token);
+            if (!param.isEmpty()) {
+                StringBuffer buffer = new StringBuffer(this.domain + this.token + "?");
+                for (int i = 0; i < param.size(); i++) {
+                    if (i == 0) {
+                        buffer.append(param.get(i).getKey() + "=" + URLEncoder.encode(param.get(i).getValue()));
+                    } else {
+                        buffer.append("&" + param.get(i).getKey() + "=" + URLEncoder.encode(param.get(i).getValue()));
+                    }
+                }
+                qwWebView.loadUrl(buffer.toString());
+            } else {
+                qwWebView.loadUrl(this.domain + this.token);
+            }
 //        qwWebView.loadUrl("javascript:alert('hi')");
 
 
@@ -208,7 +236,7 @@ public final class SurveyFragment extends Fragment {
             });
 
             frameLayout.addView(qwWebView);
-            if(loader) {
+            if (loader) {
                 frameLayout.addView(progressBar);
             }
         }

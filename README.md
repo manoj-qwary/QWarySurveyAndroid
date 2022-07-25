@@ -24,6 +24,18 @@ Then set the fields you want.
                 .prepare();
 ```
 
+To add query params like this.
+
+```java
+  new Survey.Builder()
+                .setActivity(this)
+                .setDomain("domain_url")
+                .setToken("survey_token")
+                .setParam("email", "abc@gmail.com")
+                .setParam("planId", "plan1")
+                .showNow();
+```
+
 You can prepare the schedule survey to start after HOURS or DAYS
 
 ```java
@@ -31,6 +43,7 @@ You can prepare the schedule survey to start after HOURS or DAYS
 .setStartAfter(TimeUnit.DAYS.toMillis(1L)) //To start after 1 day
 
 ```
+
 To show the the survey at once without any delay
 
 ```java
@@ -41,10 +54,12 @@ To show the the survey at once without any delay
                 .showNow();
 
 ```
+
 To remove the specific survey from schedule
 ```java
 new Survey.Builder().setActivity(this).clear("token");
 ```
+
 Add below into app gradle
 
 ```java

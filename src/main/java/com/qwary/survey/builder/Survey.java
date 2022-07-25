@@ -6,11 +6,15 @@ import android.widget.Toast;
 
 import com.qwary.survey.activity.SurveyActivity;
 import com.qwary.survey.helper.DBHelper;
+import com.qwary.survey.model.ParamModel;
+
+import java.util.ArrayList;
 
 public class Survey {
 
     private String domain;
     private String token;
+    private ArrayList<ParamModel> param;
     private Boolean loader;
     private Boolean modal = false;
     private long startAfter;
@@ -43,6 +47,7 @@ public class Survey {
         this.activity = builder.activity;
         this.domain = builder.domain;
         this.token = builder.token;
+        this.param = builder.param;
         this.loader = builder.loader;
         this.modal = builder.modal;
         this.startAfter = builder.startAfter;
@@ -52,6 +57,12 @@ public class Survey {
         intent.putExtra("prepare", false);
         intent.putExtra("domain", this.domain);
         intent.putExtra("token", this.token);
+        if (!this.param.isEmpty()) {
+            for (int i = 0; i < this.param.size(); i++) {
+                String[] temp = new String[]{this.param.get(i).getKey(), this.param.get(i).getValue()};
+                intent.putExtra("param" + i, temp);
+            }
+        }
         intent.putExtra("loader", this.loader);
         intent.putExtra("modal", this.modal);
         intent.putExtra("startAfter", this.startAfter);
@@ -63,6 +74,7 @@ public class Survey {
         this.activity = builder.activity;
         this.domain = builder.domain;
         this.token = builder.token;
+        this.param = builder.param;
         this.loader = builder.loader;
         this.modal = builder.modal;
         this.startAfter = builder.startAfter;
@@ -81,7 +93,7 @@ public class Survey {
 
     public Survey(String token, Builder builder) {
         dbHelper = new DBHelper(builder.activity);
-        if(dbHelper.surveyExist(token)) {
+        if (dbHelper.surveyExist(token)) {
             dbHelper.deleteSurvey(token);
             Toast.makeText(builder.activity, "Survey Deleted", Toast.LENGTH_SHORT).show();
         } else {
@@ -95,10 +107,15 @@ public class Survey {
         private Activity activity;
         private String domain;
         private String token;
+        private ArrayList<ParamModel> param;
         private Boolean loader;
         private Boolean modal = false;
         private long startAfter = 0L;
         private long repeatInterval = 0L;
+
+        public Builder() {
+            this.param = new ArrayList<>();
+        }
 
         public Builder setActivity(Activity activity) {
             this.activity = activity;
@@ -112,6 +129,11 @@ public class Survey {
 
         public Builder setToken(String token) {
             this.token = token;
+            return this;
+        }
+
+        public Builder setParam(String key, String value) {
+            this.param.add(new ParamModel(key, value));
             return this;
         }
 
